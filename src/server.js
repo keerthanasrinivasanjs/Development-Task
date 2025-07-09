@@ -78,6 +78,30 @@ app.delete('/users/:id', async (req, res) => {
         res.status(500).send('Failed to delete user');
     }
 });
+app.put('/update-user/:id', async (req, res) => {
+    const userId = parseInt(req.params.id);
+    const { Name, Email, Phone, Age, City } = req.body;
+
+    try {
+        const pool = await connect();
+        await pool.request()
+            .input('Id', sql.Int, userId)
+            .input('Name', sql.NVarChar, Name)
+            .input('Email', sql.NVarChar, Email)
+            .input('Phone', sql.NVarChar, Phone)
+            .input('Age', sql.Int, Age)
+            .input('City', sql.NVarChar, City)
+            .query(`
+        UPDATE Users 
+        SET Name = @Name, Email = @Email, Phone = @Phone, Age = @Age, City = @City 
+        WHERE Id = @Id
+      `);
+        res.status(200).send('User updated');
+    } catch (err) {
+        console.error('Update error:', err);
+        res.status(500).send('Update failed');
+    }
+});
 
 // Start server
 app.listen(PORT, () => {
