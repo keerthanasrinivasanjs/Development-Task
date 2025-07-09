@@ -209,7 +209,8 @@
           <td>${user.Phone}</td>
           <td>${user.Age}</td>
           <td>${user.City}</td>
-          <td><button class="delete-btn" onclick="deleteUser(${user.Id})">Delete</button></td>
+          <td><button onclick='enableEditMode(this.parentElement.parentElement, ${JSON.stringify(user).replace(/'/g, "\\'")})'>Edit</button>
+          <button class="delete-btn" onclick="deleteUser(${user.Id})">Delete</button></td>
         `;
                 tbody.appendChild(row);
             });
@@ -338,7 +339,51 @@
                 alert('Failed to delete user');
             }
         }
+function enableEditMode(row, user) {
+            row.innerHTML = `
+    <td>${user.Id}</td>
+    <td><input value="${user.Name}" id="edit-name-${user.Id}"></td>
+    <td><input value="${user.Email}" id="edit-email-${user.Id}"></td>
+    <td><input value="${user.Phone}" id="edit-phone-${user.Id}"></td>
+    <td><input value="${user.Age}" id="edit-age-${user.Id}"></td>
+    <td><input value="${user.City}" id="edit-city-${user.Id}"></td>
+    <td>
+      <button onclick="saveUser(${user.Id})">Save</button>
+      <button onclick="loadUsers()">Cancel</button>
+    </td>
+  `;
+        }
 
+        async function saveUser(id) {
+            const name = document.getElementById(`edit-name-${id}`).value.trim();
+            const email = document.getElementById(`edit-email-${id}`).value.trim();
+            const phone = document.getElementById(`edit-phone-${id}`).value.trim();
+            const age = parseInt(document.getElementById(`edit-age-${id}`).value.trim());
+            const city = document.getElementById(`edit-city-${id}`).value.trim();
+
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phonePattern = /^\+\d{1,3}\s?\d{10}$/;
+            const namePattern = /^[A-Za-z\s]{2,50}$/;
+
+            if (!namePattern.test(name)) return alert("Invalid name");
+            if (!emailPattern.test(email)) return alert("Invalid email");
+            if (!phonePattern.test(phone)) return alert("Invalid phone");
+            if (isNaN(age) || age < 1 || age > 120) return alert("Invalid age");
+
+            const res = await fetch(`/update-user/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Name: name, Email: email, Phone: phone, Age: age, City: city })
+            });
+
+            if (res.ok) {
+                loadUsers();
+            } else {
+                alert("Failed to update user");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded'
         window.addEventListener('DOMContentLoaded', loadUsers);
     </script>
 </body>
